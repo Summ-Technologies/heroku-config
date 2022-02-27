@@ -1,0 +1,16 @@
+name: "Set config values in Heroku app."
+author: "Jared Hanson"
+description: "A simple action to set config values in your Heroku app."
+inputs:
+  heroku_api_key:
+    description: "API key linked to your Heroku account"
+    required: true
+  heroku_app_name:
+    description: "Heroku app name"
+    required: true
+  envfile_path:
+    description: "Path to env file"
+    required: true
+runs:
+  using: "node12"
+  main: "dist/index.js"
