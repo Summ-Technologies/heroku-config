@@ -11,7 +11,7 @@ function heroku(command) {
 async function loginHeroku() {
   try {
     let loggedInUser = await exec(heroku("auth:whoami"));
-    console.log(`${loggedInUser.stdout} logged in successfully ✅`);
+    console.log(`${loggedInUser.stdout.trim()} logged in successfully ✅`);
   } catch (error) {
     throw Error(`Authentication process failed. Error: ${error.message}`);
   }
