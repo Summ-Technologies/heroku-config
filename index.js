@@ -1,13 +1,17 @@
 const core = require("@actions/core");
-const fs = require("fs");
+const { promisify } = require("util");
 const exec = promisify(require("child_process").exec);
+const fs = require("fs");
+
+function heroku(command) {
+  const herokuApiKey = core.getInput("heroku_api_key");
+  return `HEROKU_API_KEY=${herokuApiKey} heroku ${command}`;
+}
 
 async function loginHeroku() {
-  const herokuApiKey = core.getInput("heroku_api_key");
   try {
-    await exec(`export HEROKU_API_KEY=${herokuApiKey}`);
-    let loggedInUser = await exec(`heroku auth:whoami`);
-    console.log(`${loggedInUser} logged in successfully ✅`);
+    let loggedInUser = await exec(heroku("auth:whoami"));
+    console.log(`${loggedInUser.stdout} logged in successfully ✅`);
   } catch (error) {
     throw Error(`Authentication process failed. Error: ${error.message}`);
   }
@@ -29,18 +33,17 @@ async function setHerokuConfig() {
   for (let envVarKey in envVars) {
     let envVarValue = envVars[envVarKey];
     let existingValueOutput = await exec(
-      `heroku config:get --app ${herokuAppName} ${envVarKey}`
+      heroku(`config:get --app ${herokuAppName} ${envVarKey}`)
     );
     let existingValue = existingValueOutput.stdout.trim();
     if (existingValue !== envVarValue) {
-      console.log(`Updating new value for: ${envVarKey}`);
       changedEnvVars.push(`${envVarKey}=${envVarValue}`);
     }
   }
   if (changedEnvVars.length > 0) {
     try {
       await exec(
-        `heroku config:set --app ${herokuAppName} ${changedEnvVars.join(" ")} `
+        heroku(`config:set --app ${herokuAppName} ${changedEnvVars.join(" ")}`)
       );
       console.log(
         `Successfully set new config values: ${changedEnvVars
@@ -50,6 +53,8 @@ async function setHerokuConfig() {
     } catch (error) {
       throw Error(`Failure setting config values. Error: ${error.message}`);
     }
+  } else {
+    console.log("No config values were changed.");
   }
 }
 
